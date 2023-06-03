@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.knoxter.internal</groupId>
 	<artifactId>objectmapmapper</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>ObjectMapMapper</name>
     <description>Automatically map object to a map.</description>
 	

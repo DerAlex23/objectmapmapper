@@ -15,7 +15,9 @@ import de.knoxter.internal.objectmapmapper.ObjectMapMapper;
 import de.knoxter.internal.objectmapmapper.ObjectMapMapperConfig;
 import de.knoxter.internal.objectmapmapper.exception.AutoMapperException;
 import de.knoxter.internal.objectmapmapper.helper.ObjectMapMapperTestData;
+import de.knoxter.internal.objectmapmapper.helper.testdata.PrimitiveTestClass;
 import de.knoxter.internal.objectmapmapper.helper.testdata.TestConverter;
+import de.knoxter.internal.objectmapmapper.helper.testdata.WrapperTestClass;
 
 public class ObjectMapMapperTests {
     // TODO: check deeper paths for converter and source-target-mapping
@@ -229,6 +231,27 @@ public class ObjectMapMapperTests {
         Map<String, Object> actual = mapper.objectToMap(obj);
         // validate
         assertMapEquals(expected, actual);
+    }
+    @Test
+    public void classMapping_shouldSucceed() throws AutoMapperException {
+        // prepare
+        ObjectMapMapper mapper = getDefaultMapper();
+        ObjectMapMapperConfig primCfg = new ObjectMapMapperConfig().setMapAllProperties(false).mapProperty("primByte");
+        ObjectMapMapperConfig wrapperCfg = new ObjectMapMapperConfig().setMapAllProperties(false).mapProperty("wrapperLong");
+        mapper.setClassConfig(PrimitiveTestClass.class, primCfg);
+        mapper.setClassConfig(WrapperTestClass.class, wrapperCfg);
+        Map<String, Object> primExpected = ObjectMapMapperTestData.emptyExpected();
+        primExpected.put("primByte", PrimitiveTestClass.filled().getPrimByte());
+        Map<String, Object> wrapperExpected = ObjectMapMapperTestData.emptyExpected();
+        wrapperExpected.put("wrapperLong", WrapperTestClass.filled().getWrapperLong());
+        Object primObj = ObjectMapMapperTestData.primitive();
+        Object wrapperObj = ObjectMapMapperTestData.wrapper();
+        // test
+        Map<String, Object> primActual = mapper.objectToMap(primObj);
+        Map<String, Object> wrapperActual = mapper.objectToMap(wrapperObj);
+        // validate
+        assertMapEquals(primExpected, primActual);
+        assertMapEquals(wrapperExpected, wrapperActual);
     }
 
     private void assertMapEquals(Map<String, Object> expected, Map<String, Object> actual) {

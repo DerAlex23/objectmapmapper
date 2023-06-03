@@ -25,14 +25,15 @@ public class ObjectMapMapper {
         Integer.class, Long.class, Double.class, Float.class, String.class
     });
     private Map<Class<?>, Map<String, Method>> cachedGetters = new HashMap<Class<?>, Map<String, Method>>();
-    private ObjectMapMapperConfig config;
+    private ObjectMapMapperConfig defaultConfig;
+    private Map<Class<?>, ObjectMapMapperConfig> classConfigs = new HashMap<Class<?>, ObjectMapMapperConfig>();
 
     /**
-     * Creates a new mapper with the provided configuration.
-     * @param config Mapper configuration
+     * Creates a new mapper with the provided configuration as default.
+     * @param config Mapper configuration.
      */
     public ObjectMapMapper(ObjectMapMapperConfig config) {
-        this.config = config;
+        this.defaultConfig = config;
     }
 
     /**
@@ -40,6 +41,24 @@ public class ObjectMapMapper {
      */
     public ObjectMapMapper() {
         this(new ObjectMapMapperConfig());
+    }
+
+    /**
+     * Sets a mapping configuration for a specific class.
+     * @param clazz Class to which this configuration should apply.
+     * @param config The mapping configuration for the class.
+     */
+    public void setClassConfig(Class<?> clazz, ObjectMapMapperConfig config) {
+        classConfigs.put(clazz, config);
+    }
+
+    /**
+     * Gets a mapping configuration for a specific class.
+     * @param clazz Class of which you want to get the configuration.
+     * @return The appropriate configuration or null.
+     */
+    public ObjectMapMapperConfig getClassConfig(Class<?> clazz) {
+        return classConfigs.get(clazz);
     }
 
     /**
@@ -67,12 +86,17 @@ public class ObjectMapMapper {
             return convertArray(object, path);
         if(object instanceof Map)
             return convertMap(object, path);
-        return convertObjectsPropertiesToMap(object, path, clazz);
+        ObjectMapMapperConfig config = getConfigForClass(clazz);
+        return convertObjectsPropertiesToMap(object, path, clazz, config);
     }
 
-    private Object convertObjectsPropertiesToMap(Object object, String path, Class<?> clazz) throws AutoMapperException {
+    private ObjectMapMapperConfig getConfigForClass(Class<?> clazz) {
+        return classConfigs.containsKey(clazz) ? classConfigs.get(clazz) : defaultConfig;
+    }
+
+    private Object convertObjectsPropertiesToMap(Object object, String path, Class<?> clazz, ObjectMapMapperConfig config) throws AutoMapperException {
         Map<String, Method> getters = getPropertyGetters(clazz);
-        List<String> keysToMap = getKeysToMap(getters);
+        List<String> keysToMap = getKeysToMap(getters, config);
         Map<String, Object> resultMap = new HashMap<String, Object>();
         for (String key : keysToMap) {
             Object value;
@@ -101,7 +125,7 @@ public class ObjectMapMapper {
         return getters;
     }
 
-    private List<String> getKeysToMap(Map<String, Method> sourceGetters) {
+    private List<String> getKeysToMap(Map<String, Method> sourceGetters, ObjectMapMapperConfig config) {
         List<String> keysToMap = new ArrayList<String>();
         for (String key : sourceGetters.keySet()) {
             if((config.isMapAllProperties() && !config.getPropertiesToIgnore().contains(key)) ||
