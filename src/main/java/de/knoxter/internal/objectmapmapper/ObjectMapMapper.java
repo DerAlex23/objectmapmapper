@@ -24,6 +24,7 @@ public class ObjectMapMapper {
         Boolean.class, Byte.class, Character.class, Short.class,
         Integer.class, Long.class, Double.class, Float.class, String.class
     });
+    private Map<Class<?>, Map<String, Method>> cachedGetters = new HashMap<Class<?>, Map<String, Method>>();
     private ObjectMapMapperConfig config;
 
     /**
@@ -89,12 +90,15 @@ public class ObjectMapMapper {
         }
         return resultMap;
     }
-
+    
     private Map<String, Method> getPropertyGetters(Class<?> clazz) {
-        Map<String, Method> sourceGetters = ReflectUtils.getMethodNameMap(clazz, "get");
-        sourceGetters.remove("class");
-        sourceGetters.remove("");
-        return sourceGetters;
+        if(cachedGetters.containsKey(clazz))
+            return cachedGetters.get(clazz);
+        Map<String, Method> getters = ReflectUtils.getMethodNameMap(clazz, "get");
+        getters.remove("class");
+        getters.remove("");
+        cachedGetters.put(clazz, getters);
+        return getters;
     }
 
     private List<String> getKeysToMap(Map<String, Method> sourceGetters) {

@@ -32,6 +32,20 @@ public class ObjectMapMapperTests {
     }
 
     @Test
+    public void caching_shouldSucceed() throws AutoMapperException {
+        // prepare
+        ObjectMapMapper mapper = getDefaultMapper();
+        Map<String, Object> expected = ObjectMapMapperTestData.primitiveExpected();
+        Object obj = ObjectMapMapperTestData.primitive();
+        // test
+        Map<String, Object> actual = mapper.objectToMap(obj);
+        Map<String, Object> second = mapper.objectToMap(obj);
+        // validate
+        assertMapEquals(expected, actual);
+        assertMapEquals(expected, second);
+    }
+
+    @Test
     public void primitive_shouldSucceed() throws AutoMapperException {
         // prepare
         ObjectMapMapper mapper = getDefaultMapper();
